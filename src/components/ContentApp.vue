@@ -1,6 +1,8 @@
 <template>
 <div>
 
+<div id="TabsContent" v-if="savingPerson==false">
+
 <el-row type="flex" justify="center"> 
   <el-col :span="22">
 <el-tabs>
@@ -60,7 +62,7 @@
     <el-form :model="person.phoneNumber" :rules="rules.personPhoneNumber" ref="formPersonPhoneNumber" :inline="true" class="demo-form-inline">
 
     <el-form-item label="Phone Number" prop="number">
-        <el-input placeholder="(99) 981824919" v-model="person.phoneNumber.number"></el-input>
+        <el-input placeholder="222-055-9034" v-model="person.phoneNumber.number"></el-input>
     </el-form-item>
        <el-button type="primary" @click="AddPhoneNumberToTable">Add</el-button>
     </el-form>
@@ -78,7 +80,7 @@
 
 <el-row type="flex" justify="center">
   <el-col :span="22">
-     <el-table :data="tablePhoneNumbers" style="width:55%;margin:auto" max-height="250" size="mini">
+     <el-table :data="tablePhoneNumbers" style="width:55%;margin:auto;text-align:left" max-height="250" size="mini">
       <el-table-column prop="number" label="Phone Number" sortable>
       </el-table-column>
         <el-table-column label="Actions">
@@ -89,7 +91,7 @@
     </el-table>
    </el-col>
    <el-col>
-     <el-table :data="tableEmails" style="width:55%;margin:auto" max-height="250" size="mini">
+     <el-table :data="tableEmails" style="width:55%;margin:auto;text-align:left" max-height="250" size="mini">
       <el-table-column prop="description" label="E-mail" sortable>
       </el-table-column>
         <el-table-column label="Actions">
@@ -113,8 +115,14 @@
        <el-button type="primary" @click="SavePerson()"> Save person </el-button>
     </el-col>
 </el-row>
+</div>
 
-    <el-table :data="tablePersons" style="width: 60%;margin:auto">
+  <i v-else class="el-icon-loading" style="margin-top:20px;margin-bottom:20px"></i> 
+
+<!-- TABLE TO SHOW REGISTERED PERSONS FROM DATABASE-->
+
+
+    <el-table :data="tablePersons" height="400" style="width:60%;margin:auto;text-align:left" v-if="tablePersons.length > 0 ">
          <el-table-column type="expand">
       <template slot-scope="scope">
       
@@ -128,7 +136,7 @@
 
      <el-tab-pane label="Addresses">
       
-      <el-table :data="scope.row.addresses" style="width: 100%;margin:auto">
+      <el-table :data="scope.row.addresses" size="mini" style="width: 100%;margin:auto;text-align:left">
       <el-table-column prop="street" label="Street Name">
       </el-table-column>
       <el-table-column prop="postalCode" label="Postal Code">
@@ -143,14 +151,14 @@
     <el-tab-pane label="Contact">
       <el-row type="flex">
         <el-col>
-        <el-table :data="scope.row.phoneNumbers" style="width: 100%;margin:auto">
+        <el-table :data="scope.row.phoneNumbers" size="mini" style="width: 100%;margin:auto;text-align:left">
             <el-table-column prop="number" label="Phone number">
             </el-table-column>
             </el-table>
         </el-col>
 
            <el-col>
-      <el-table :data="scope.row.emails" style="width: 100%;margin:auto">
+      <el-table :data="scope.row.emails" size="mini" style="width: 100%;margin:auto;text-align:left">
         <el-table-column prop="description" label="E-mail address">
         </el-table-column>
         </el-table>
@@ -161,237 +169,43 @@
   </el-tabs>
       </template>
     </el-table-column>
-      <el-table-column prop="firstName" label="First Name">
+ 
+      <el-table-column prop="firstName" label="First Name" sortable>
       </el-table-column>
-      <el-table-column prop="lastName" label="Last Name">
+      <el-table-column prop="lastName" label="Last Name" sortable>
       </el-table-column>
-      <el-table-column prop="birthday" label="Birthday">
+      <el-table-column prop="birthday" label="Birthday" sortable>
       </el-table-column>
           <el-table-column label="Actions">
       <template slot-scope="scope">
-        <router-link :to="{name:'EditPerson',params:{'person':scope.row}}">
-           <el-button size="mini" type="primary" icon="el-icon-edit" @click="DeletePhoneNumberTable(scope.row.number)"></el-button>
-        </router-link>
-        
-       <el-button size="mini" type="danger" icon="el-icon-delete" @click="DeletePhoneNumberTable(scope.row.number)"></el-button>
+        <router-link :to="{name:'EditPerson',params:{'person':scope.row}}">       
+              <el-button size="mini" type="primary" icon="el-icon-edit"></el-button>
+        </router-link>        
+       <el-button size="mini" type="danger" icon="el-icon-delete" @click="ExcludePerson(scope.row.id)"></el-button>
       </template>
     </el-table-column>
     </el-table>
+    <i v-else class="el-icon-loading" style="margin-top:100px"></i>
 
 </div>
 </template>
 
 <script>
 import { mapActions, mapGetters } from "vuex";
+import PersonData from "./PersonMixin";
 
 export default {
+  mixins: [PersonData],
   data() {
-    var CheckEmail = (rule, value, callback) => {
-      if (value !== "") {
-        for (var x = 0; x < this.tableEmails.length; x++) {
-          if (value == this.tableEmails[x].email) {
-            return callback(new Error("E-mail address already inserted."));
-          }
-        }
-        callback();
-      }
-    };
-    var CheckPhoneNumber = (rule, value, callback) => {
-      if (value !== "") {
-        for (var x = 0; x < this.tablePhoneNumbers.length; x++) {
-          if (value == this.tablePhoneNumbers[x].phoneNumber) {
-            return callback(new Error("Phone number already inserted."));
-          }
-        }
-        callback();
-      }
-    };
     return {
-      tablePersons: [], //PEOPLE TO SHOW IN THE TABLE
-      person: {
-        data: {
-          firstName: "",
-          lastName: "",
-          birthday: ""
-        },
-        address: {
-          street: "",
-          postalCode: "",
-          city: "",
-          state: ""
-        },
-        phoneNumber: {
-          number: ""
-        },
-        email: {
-          description: ""
-        }
-      },
-      tableAddresses: [],
-      tablePhoneNumbers: [],
-      tableEmails: [],
-      rules: {
-        // RULES FOR DATA DALIDATION IN FORMS
-        tableAddresses:[
-          {
-            type: Array,
-            required: true
-          }
-        ],
-        personData: {
-          firstName: [
-            {
-              required: true,
-              message: "Please insert first name",
-              trigger: "blur"
-            },
-            {
-              min: 3,
-              max: 20,
-              message: "Length should be 3 to 5",
-              trigger: "blur"
-            }
-          ],
-          lastName: [
-            {
-              required: true,
-              message: "Please insert first name",
-              trigger: "blur"
-            },
-            {
-              min: 3,
-              max: 20,
-              message: "Length should be 3 to 5",
-              trigger: "blur"
-            }
-          ],
-          birthday: [
-            {
-              required: true,
-              message: "Please pick a birthday",
-              trigger: "blur"
-            }
-          ]
-        },
-        personAddress: {
-          postalCode: [
-            {
-              required: true,
-              message: "Please insert postal code",
-              trigger: "blur"
-            }
-          ],
-          street: [
-            {
-              required: true,
-              message: "Please insert street name",
-              trigger: "blur"
-            }
-          ],
-          city: [
-            {
-              required: true,
-              message: "Please insert city",
-              trigger: "blur"
-            }
-          ],
-          state: [
-            {
-              required: true,
-              message: "Please insert state",
-              trigger: "blur"
-            }
-          ]
-        },
-        personPhoneNumber: {
-          number: [
-            {
-              required: true,
-              message: "Please insert phone number"
-            },
-            {
-              validator: CheckPhoneNumber,
-              trigger: "blur"
-            }
-          ]
-        },
-        personEmail: {
-          description: [
-            {
-              required: true,
-              message: "Please insert e-mail",
-              trigger: "blur"
-            },
-            {
-              validator: CheckEmail,
-              trigger: "blur"
-            }
-          ]
-        }
-      }
+      tablePersons: [] //PEOPLE TO SHOW IN THE TABLE
     };
   },
   methods: {
-    ...mapActions(["InsertNewPerson", "SetPersons"]),
+    ...mapActions(["InsertNewPerson", "SetPersons", "DeletePerson"]),
     ...mapGetters(["GetPersons"]),
-    AddAddressToTable() {
-      this.$refs.formPersonAddress
-        .validate()
-        .then(valid => {
-          if (valid) {
-            this.tableAddresses.push({
-              street: this.person.address.street,
-              postalCode: this.person.address.postalCode,
-              city: this.person.address.city,
-              state: this.person.address.state
-            });
-          }
-        })
-        .catch(() => {});
-    },
-    AddPhoneNumberToTable() {
-      this.$refs.formPersonPhoneNumber
-        .validate()
-        .then(valid => {
-          if (valid) {
-            this.tablePhoneNumbers.push({
-              number: this.person.phoneNumber.number
-            });
-          }
-        })
-        .catch(() => {});
-    },
-    AddEmailToTable() {
-      this.$refs.formPersonEmail
-        .validate()
-        .then(valid => {
-          if (valid) {
-            this.tableEmails.push({
-              description: this.person.email.description
-            });
-          }
-        })
-        .catch(() => {});
-    },
-    DeletePhoneNumberTable(item) {
-      var table = this.tablePhoneNumbers;
-
-      for (let a = 0; a < table.length; a++) {
-        if (table[a].phoneNumber == item) {
-          table.splice(a, 1);
-        }
-      }
-    },
-    DeleteEmailTable(item) {
-      var table = this.tableEmails;
-
-      for (let a = 0; a < table.length; a++) {
-        if (table[a].email == item) {
-          table.splice(a, 1);
-        }
-      }
-    },
-    SavePerson() {
+    PersonToDataBase() {
+      this.savingPerson = true;
       this.$refs.formPersonData
         .validate()
         .then(valid => {
@@ -405,7 +219,9 @@ export default {
               emails: this.tableEmails
             })
               .then(() => {
+                this.savingPerson = false;
                 this.PersonInsertedSuccesfullyMessage();
+                this.LoadPersons();
               })
               .catch(error => {
                 alert(error);
@@ -416,14 +232,68 @@ export default {
           this.ErrorValidationMessage();
         });
     },
-    LoadPersons() {
-      this.SetPersons()
+    SavePerson() {
+      if (this.tablePhoneNumbers.length >= 1) {
+        if (this.tableEmails.length >= 1) {
+          this.PersonToDataBase();
+        } else {
+          this.ErrorAtLeastOneEmailMessage();
+        }
+      } else {
+        this.ErrorAtLeastOnePhoneNumberMessage();
+      }
+    },
+    ExcludePerson(personDeleted) {
+      this.$confirm(
+        "This will permanently delete the person. Continue?",
+        "Warning",
+        {
+          confirmButtonText: "OK",
+          cancelButtonText: "Cancel",
+          type: "warning"
+        }
+      )
         .then(() => {
-          this.tablePersons = this.GetPersons();
+          this.DeletePerson(personDeleted)
+            .then(() => {
+              this.$message({
+                type: "success",
+                message: "Delete completed"
+              });
+              for (let a = 0; a < this.tablePersons.length; a++) {
+                if (this.tablePersons[a].id == personDeleted) {
+                  this.tablePersons.splice(a, 1);
+                }
+              }
+            })
+            .catch(() => {
+              this.ErrorDeletePersonMessage();
+            });
         })
         .catch(() => {
-          alert("Persons could not be loaded.");
+          this.$message({
+            type: "info",
+            message: "Delete canceled"
+          });
         });
+    },
+    LoadPersons() {
+      setTimeout(() => {
+        this.SetPersons()
+          .then(() => {
+            this.tablePersons = this.GetPersons();
+          })
+          .catch(() => {
+            alert("Persons could not be loaded.");
+          });
+      }, 3000);
+    },
+    ErrorDeletePersonMessage() {
+      this.$message({
+        showClose: true,
+        message: "Error deleting person.",
+        type: "error"
+      });
     },
     ErrorValidationMessage() {
       this.$message({

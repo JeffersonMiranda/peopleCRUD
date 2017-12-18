@@ -42,7 +42,7 @@
     <el-button v-else type="primary" @click="FinishAddressEditing">Finish</el-button>
     </el-form>
 
-    <el-table :data="tableAddresses" max-height="250" size="mini">
+    <el-table :data="tableAddresses" style="text-align:left" max-height="250" size="mini">
       <el-table-column prop="street" label="Street Name" sortable>
       </el-table-column>
       <el-table-column prop="postalCode" label="Postal Code" sortable>
@@ -68,7 +68,7 @@
     <el-form :model="person.phoneNumber" :rules="rules.personPhoneNumber" ref="formPersonPhoneNumber" :inline="true" class="demo-form-inline">
 
     <el-form-item label="Phone Number" prop="number">
-        <el-input placeholder="(99) 981824919" v-model="person.phoneNumber.number"></el-input>
+        <el-input placeholder="222-055-9034" v-model="person.phoneNumber.number"></el-input>
     </el-form-item>
        <el-button v-if="EditingPhoneForm==false" type="primary" @click="AddPhoneNumberToTable">Add</el-button>
        <el-button v-else type="primary" @click="FinishPhoneNumberEditing">Finish</el-button>
@@ -78,7 +78,7 @@
     <el-col :span="12">
     <el-form :model="person.email" :rules="rules.personEmail" ref="formPersonEmail" :inline="true" class="demo-form-inline">      
      <el-form-item label="E-mail" prop="description">
-        <el-input placeholder="example@gmail.com" v-model="person.email.description"></el-input>
+        <el-input type="email" placeholder="example@gmail.com" v-model="person.email.description"></el-input>
     </el-form-item>
         <el-button v-if="EditingEmailForm==false" type="primary" @click="AddEmailToTable">Add</el-button>
         <el-button v-else type="primary" @click="FinishEmailEditing">Finish</el-button>
@@ -88,7 +88,7 @@
 
 <el-row type="flex" justify="center">
   <el-col :span="22">
-     <el-table :data="tablePhoneNumbers" style="width:55%;margin:auto" max-height="250" size="mini">
+     <el-table :data="tablePhoneNumbers" style="width:55%;margin:auto;text-align:left" max-height="250" size="mini">
       <el-table-column prop="number" label="Phone Number" sortable>
       </el-table-column>
         <el-table-column label="Actions">
@@ -100,7 +100,7 @@
     </el-table>
    </el-col>
    <el-col>
-     <el-table :data="tableEmails" style="width:60%;margin:auto" max-height="250" size="mini">
+     <el-table :data="tableEmails" style="width:60%;margin:auto;text-align:left" max-height="250" size="mini">
       <el-table-column prop="description" label="E-mail" sortable>
       </el-table-column>
         <el-table-column label="Actions">
@@ -121,7 +121,13 @@
 <br>
 <br>
 <el-row>
-    <el-col :span="6">
+    <el-col :span="4">
+      <router-link :to="{name: 'Home'}" style="font-size:12px">
+        <a> Back to home </a>
+      </router-link>
+      
+    </el-col>
+    <el-col :span="2">       
        <el-button type="primary" @click="ModifyPerson()"> Save modifications </el-button>
     </el-col>
 </el-row>
@@ -131,125 +137,30 @@
 
 
 <script>
-import rulesForm from "./RulesFormPerson";
 import { mapActions, mapGetters } from "vuex";
+import PersonData from "./PersonMixin";
 
 export default {
+  mixins: [PersonData],
   data() {
-    var CheckEmail = (rule, value, callback) => {
-      if (value !== "") {
-        for (var x = 0; x < this.tableEmails.length; x++) {
-          if (value == this.tableEmails[x].email) {
-            return callback(new Error("E-mail address already inserted."));
-          }
-        }
-        callback();
-      }
-    };
-    var CheckPhoneNumber = (rule, value, callback) => {
-      if (value !== "") {
-        for (var x = 0; x < this.tablePhoneNumbers.length; x++) {
-          if (value == this.tablePhoneNumbers[x].phoneNumber) {
-            return callback(new Error("Phone number already inserted."));
-          }
-        }
-        callback();
-      }
-    };
     return {
-      tablePersons: [], //PEOPLE TO SHOW IN THE TABLE
       person: {
         data: {
-          id: "",
-          firstName: "",
-          lastName: "",
-          birthday: ""
-        },
-        address: {
-          street: "",
-          postalCode: "",
-          city: "",
-          state: ""
-        },
-        phoneNumber: {
-          number: ""
-        },
-        email: {
-          description: ""
-        },
-        deletedAddresses: [],
-        deletedPhoneNumbers: [],
-        deletedEmails: []
+          id: ""
+        }
       },
-      tableAddresses: [],
-      tablePhoneNumbers: [],
-      tableEmails: [],
+      tablePersons: [], //PEOPLE TO SHOW IN THE TABLE
+      deletedAddresses: [],
+      deletedPhoneNumbers: [],
+      deletedEmails: [],
       EditingAddressForm: false,
       EditingPhoneForm: false,
-      EditingEmailForm: false,
-      rules: rulesForm // RULES IMPORTED
+      EditingEmailForm: false
     };
   },
   methods: {
-    ...mapActions(["InsertNewPerson", "SetPersons", "UpdatePerson"]),
+    ...mapActions(["InsertNewPerson", "SetPersons", "DeletePerson"]),
     ...mapGetters(["GetPersons"]),
-    AddAddressToTable() {
-      this.$refs.formPersonAddress
-        .validate()
-        .then(valid => {
-          if (valid) {
-            this.tableAddresses.push({
-              street: this.person.address.street,
-              postalCode: this.person.address.postalCode,
-              city: this.person.address.city,
-              state: this.person.address.state
-            });
-          }
-        })
-        .catch(() => {});
-    },
-    AddPhoneNumberToTable() {
-      this.$refs.formPersonPhoneNumber
-        .validate()
-        .then(valid => {
-          if (valid) {
-            this.tablePhoneNumbers.push({
-              number: this.person.phoneNumber.number
-            });
-          }
-        })
-        .catch(() => {});
-    },
-    AddEmailToTable() {
-      this.$refs.formPersonEmail
-        .validate()
-        .then(valid => {
-          if (valid) {
-            this.tableEmails.push({
-              description: this.person.email.description
-            });
-          }
-        })
-        .catch(() => {});
-    },
-    DeletePhoneNumberTable(item) {
-      var table = this.tablePhoneNumbers;
-
-      for (let a = 0; a < table.length; a++) {
-        if (table[a].phoneNumber == item) {
-          table.splice(a, 1);
-        }
-      }
-    },
-    DeleteEmailTable(item) {
-      var table = this.tableEmails;
-
-      for (let a = 0; a < table.length; a++) {
-        if (table[a].email == item) {
-          table.splice(a, 1);
-        }
-      }
-    },
     SendAddressFromTableToForm(addressTable) {
       // FOR EDITING
       this.person.address = {
@@ -351,27 +262,7 @@ export default {
           this.ErrorValidationMessage();
         });
     },
-    ErrorValidationMessage() {
-      this.$message({
-        showClose: true,
-        message: "The fields need to be filled correctly.",
-        type: "error"
-      });
-    },
-    ErrorAtLeastOnePhoneNumberMessage() {
-      this.$message({
-        showClose: true,
-        message: "At least one phone number is required.",
-        type: "error"
-      });
-    },
-    ErrorAtLeastOneEmailMessage() {
-      this.$message({
-        showClose: true,
-        message: "At least one e-mail address is required.",
-        type: "error"
-      });
-    },
+
     PersonUpdatedSuccesfullyMessage() {
       this.$message({
         showClose: true,
