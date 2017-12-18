@@ -13,7 +13,7 @@ const PersonData = {
                 }
 
                 for (var x = 0; x < this.tableEmails.length; x++) {
-                    if (value == this.tableEmails[x].email) {
+                    if (value == this.tableEmails[x].description) {
                         return callback(new Error("E-mail address already inserted."));
                     }
                 }
@@ -33,7 +33,7 @@ const PersonData = {
                     return callback(new Error("Phone number format is invalid."));
                 }
                 for (var x = 0; x < this.tablePhoneNumbers.length; x++) {
-                    if (value == this.tablePhoneNumbers[x].phoneNumber) {
+                    if (value == this.tablePhoneNumbers[x].number) {
                         return callback(new Error("Phone number already inserted."));
                     }
                 }
@@ -160,7 +160,6 @@ const PersonData = {
         }
     },
     methods: {
-
         AddAddressToTable() {
             this.$refs.formPersonAddress
                 .validate()
@@ -175,6 +174,18 @@ const PersonData = {
                     }
                 })
                 .catch(() => { });
+        },
+        DeleteAddressTable(item) {
+            var table = this.tableAddresses;
+
+            for (let a = 0; a < table.length; a++) {
+                if (table[a].street == item.street
+                    && table[a].postalCode == item.postalCode
+                    && table[a].city == item.city
+                    && table[a].state == item.state) {
+                    table.splice(a, 1);
+                }
+            }
         },
         AddPhoneNumberToTable() {
             this.$refs.formPersonPhoneNumber

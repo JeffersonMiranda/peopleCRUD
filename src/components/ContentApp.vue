@@ -295,27 +295,6 @@ export default {
         type: "error"
       });
     },
-    ErrorValidationMessage() {
-      this.$message({
-        showClose: true,
-        message: "The fields need to be filled correctly.",
-        type: "error"
-      });
-    },
-    ErrorAtLeastOnePhoneNumberMessage() {
-      this.$message({
-        showClose: true,
-        message: "At least one phone number is required.",
-        type: "error"
-      });
-    },
-    ErrorAtLeastOneEmailMessage() {
-      this.$message({
-        showClose: true,
-        message: "At least one e-mail address is required.",
-        type: "error"
-      });
-    },
     PersonInsertedSuccesfullyMessage() {
       this.$message({
         showClose: true,

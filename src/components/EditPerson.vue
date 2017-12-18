@@ -54,7 +54,7 @@
         <el-table-column label="Actions">
             <template slot-scope="scope">
                <el-button size="mini" type="primary" icon="el-icon-edit" @click="SendAddressFromTableToForm(scope.row)"></el-button>
-               <el-button size="mini" type="danger" icon="el-icon-delete" @click.prevent="DeletePhoneNumberTable(scope.row.number)"></el-button>
+               <el-button size="mini" type="danger" icon="el-icon-delete" @click.prevent="DeleteAddressTable(scope.row)"></el-button>
             </template>
       </el-table-column>
     </el-table>
@@ -159,7 +159,12 @@ export default {
     };
   },
   methods: {
-    ...mapActions(["InsertNewPerson", "SetPersons", "DeletePerson"]),
+    ...mapActions([
+      "InsertNewPerson",
+      "SetPersons",
+      "DeletePerson",
+      "UpdatePerson"
+    ]),
     ...mapGetters(["GetPersons"]),
     SendAddressFromTableToForm(addressTable) {
       // FOR EDITING
@@ -237,32 +242,39 @@ export default {
       this.EditingEmailForm = false;
     },
     ModifyPerson() {
-      this.$refs.formPersonData
-        .validate()
-        .then(valid => {
-          if (valid) {
-            this.UpdatePerson({
-              id: this.person.data.id,
-              firstName: this.person.data.firstName,
-              lastName: this.person.data.lastName,
-              birthday: this.person.data.birthday,
-              addresses: this.tableAddresses,
-              phoneNumbers: this.tablePhoneNumbers,
-              emails: this.tableEmails
+      if (this.tablePhoneNumbers.length >= 1) {
+        if (this.tableEmails.length >= 1) {
+          this.$refs.formPersonData
+            .validate()
+            .then(valid => {
+              if (valid) {
+                this.UpdatePerson({
+                  id: this.person.data.id,
+                  firstName: this.person.data.firstName,
+                  lastName: this.person.data.lastName,
+                  birthday: this.person.data.birthday,
+                  addresses: this.tableAddresses,
+                  phoneNumbers: this.tablePhoneNumbers,
+                  emails: this.tableEmails
+                })
+                  .then(() => {
+                    this.PersonUpdatedSuccesfullyMessage();
+                  })
+                  .catch(error => {
+                    alert(error);
+                  });
+              }
             })
-              .then(() => {
-                this.PersonUpdatedSuccesfullyMessage();
-              })
-              .catch(error => {
-                alert(error);
-              });
-          }
-        })
-        .catch(() => {
-          this.ErrorValidationMessage();
-        });
+            .catch(() => {
+              this.ErrorValidationMessage();
+            });
+        } else {
+          this.ErrorAtLeastOneEmailMessage();
+        }
+      } else {
+        this.ErrorAtLeastOnePhoneNumberMessage();
+      }
     },
-
     PersonUpdatedSuccesfullyMessage() {
       this.$message({
         showClose: true,
